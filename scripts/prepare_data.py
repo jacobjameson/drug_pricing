@@ -1,5 +1,17 @@
+# -----------------------------------------------------------
+# AUTHOR:           Jacob Jameson
+# Last Updated:     01/12/2023
+# PURPOSE:          Prepare raw data
+# -----------------------------------------------------------
+
+
+# Required packages -----------------------------------------
+
 import numpy as np
 import pandas as pd
+
+
+# Key for currency conversions ------------------------------
 
 def create_dict_key(dataframe):
     '''
@@ -16,6 +28,9 @@ def create_dict_key(dataframe):
         conversion_key[year] = temp
             
     return conversion_key
+
+
+# Adjust all currencies --------------------------------------
 
 
 def adjustments(raw_data, conversion_key, fy_starts=13):
@@ -54,6 +69,7 @@ def adjustments(raw_data, conversion_key, fy_starts=13):
     
     return clean
 
+# Summarize by drug -------------------------------------------
 
 def summary(clean_data, fy_starts=13):
     '''
@@ -78,5 +94,8 @@ def summary(clean_data, fy_starts=13):
     # Place holder for summary helper
     
     return clean
+
+
+
 
 
