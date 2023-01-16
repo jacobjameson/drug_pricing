@@ -69,7 +69,47 @@ def adjustments(raw_data, conversion_key, fy_starts=13):
     
     return clean
 
+# Split strings -----------------------------------------------
+
+
+def split_strings(string):
+    '''
+    '''
+    new_string = '{'
+    for char in string:
+        if char not in ['+', '-', '*']:
+            new_string += char
+        else:
+            new_string += '}'
+            new_string += char
+            new_string += '{'
+            
+    new_string += '}'
+    
+    return new_string
+
+
+
+def formulas(dataframe):
+    '''
+    '''
+    dataframe["formula"] = dataframe["formula"].apply(split_strings)
+    formula_key = dict()
+    for _, row in dataframe.iterrows():
+        formula = row['formula']
+        key = row['Proper Name']
+        if key not in formula_key:
+            formula_key[key] = [{row['ID']:formula}]
+        else:
+            dict_list = formula_key.get(key)
+            formula_key[key] = dict_list + [{row['ID']:formula}]
+    
+    return formula_key
+
+
+
 # Summarize by drug -------------------------------------------
+
 
 def summary(clean_data, fy_starts=13):
     '''
