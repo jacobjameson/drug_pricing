@@ -187,4 +187,34 @@ def merge_final_clean(raw_dataframe, evaluated_key):
     return temp.merge(evaluated_key, how='left', on='Proper Name')
 
 
+# GO --------------------------------------------------------------
+
+def go():
+    raw = './data/raw data/raw data.xlsx'
+    
+    key = pd.read_excel(raw, sheet_name = 'dictionary')
+    conversion_key = create_dict_key(key)
+    df = pd.read_excel(raw, sheet_name = 'raw data')
+    clean = adjustments(df, conversion_key)
+    key = pd.read_excel(raw, sheet_name = 'dictionary')
+    formula_key = formulas(key)
+    eval_map = evaluate_helper(clean)
+    evaluated_key = evaluate(eval_map, formula_key)
+    evaluated_key = turn_into_dataframe(evaluated_key)
+    final = merge_final_clean(df, evaluated_key)
+
+        
+    df.to_excel('./data/clean data/clean data.xlsx', 
+                sheet_name = 'new data', index=False)
+            
+
+    print('-----------------------------------------------/n')
+    print('You have cleaned the data. You can view in the clean data folder!')
+    print('-----------------------------------------------/n')
+    
+        
+        
+if __name__ == "__main__":
+    go()
+
 
