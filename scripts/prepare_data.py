@@ -15,7 +15,6 @@ import pandas as pd
 
 def create_dict_key(dataframe):
     '''
-    Creates a currency key
     '''
     conversion_key = dict()
     for year in dataframe.columns[1:]:
@@ -25,10 +24,10 @@ def create_dict_key(dataframe):
         for tup in tuple(zip(categories, values)):
             temp[tup[0]] = tup[1]
         
+        temp['USD'] = 1
         conversion_key[year] = temp
             
     return conversion_key
-
 
 # Adjust all currencies --------------------------------------
 
@@ -45,29 +44,23 @@ def adjustments(raw_data, conversion_key, fy_starts=13):
     Outputs:
         adjusted_data: pandas dataframe of adjusted data
     '''
-    columns = raw_data.columns[fy_starts:]
+    columns = list(raw_data.columns[fy_starts:])
     raw_data['Region'] = raw_data['Type']
-    
+        
     for index, row in raw_data.iterrows():
         currency = row['Currency']
         for year in columns:
-            year_match = int(year[3:])
+            year_match = int(year[2:])
             infl = conversion_key[year_match]['Inflation Adjustment']
             curr = conversion_key[year_match][currency]
             row[year] = (float(row[year])/curr)*infl
-        
-        if 'US' in row['Region']:
-            row['Region'] = 'US'
-        elif 'Total' in row['Region']:
-            row['Region'] = 'Total'
-        else:
-            row['Region'] = 'ExUS'
             
         raw_data.loc[index] = row
         
-    clean = raw_data 
+    clean = raw_data
+    clean['Source'] = clean['Source'].str.replace(" ", "")
     
-    return clean
+    return clean[['Proper Name', 'Source'] + columns]
 
 # Split strings -----------------------------------------------
 
@@ -76,6 +69,8 @@ def split_strings(string):
     '''
     '''
     new_string = '{'
+    if string == '':
+        return string
     for char in string:
         if char not in ['+', '-', '*']:
             new_string += char
@@ -83,11 +78,9 @@ def split_strings(string):
             new_string += '}'
             new_string += char
             new_string += '{'
-            
-    new_string += '}'
     
-    return new_string
-
+    new_string += '}'
+    return new_string.replace("{0.5}", "0.5" )
 
 
 def formulas(dataframe):
@@ -97,45 +90,101 @@ def formulas(dataframe):
     formula_key = dict()
     for _, row in dataframe.iterrows():
         formula = row['formula']
-        key = row['Proper Name']
-        if key not in formula_key:
-            formula_key[key] = [{row['ID']:formula}]
-        else:
-            dict_list = formula_key.get(key)
-            formula_key[key] = dict_list + [{row['ID']:formula}]
-    
+        formula_key[row['ID']] = formula
+
     return formula_key
 
 
 
-# Summarize by drug -------------------------------------------
+# Evaluate formulas -------------------------------------------
 
 
-def summary(clean_data, fy_starts=13):
+def evaluate_helper(clean_dataframe):
     '''
-    Get from array 2 to array 3
     '''
-    # First simulate the dataframr
-    data = []
-    names = list(clean_data['Proper Name'].unique())
-    for name in names:
-        data.append([name, 'US'])
-        data.append([name, 'WW'])
-        data.append([name, 'ExUS'])
+    holder = dict()
+    for index, row in clean_dataframe.iterrows():
+        for year in clean_dataframe.columns[2:]:
+            if year not in holder:
+                holder[year] = {row['Source'] : row[year]}
+            else:
+                temp = holder.get(year)
+                holder[year].update({row['Source'] : row[year]})
+                
+    return holder
+
     
-    data = pd.DataFrame(data, columns = ['Proper Name', 'Region']) 
-    
-    # Add with original data to create empty rows
-    years = clean_data.columns[fy_starts:]
-    clean = clean_data.groupby(['Proper Name', 'Region'], as_index=False)[years].sum()
-    
-    clean = clean.merge(data, how='right', on=['Proper Name', 'Region'])
-    
-    # Place holder for summary helper
-    
-    return clean
+eval_map = evaluate_helper(clean)
+
+def evaluate(eval_map, formula_key):
+    '''
+    '''
+    return_dict = dict()
+    for year in eval_map.keys():
+        temp = eval_map.get(year)
+        temp_dict = dict()
+        for ID, formula in formula_key.items():
+            if formula != '{Nan}':
+                formula = formula.format(**temp)
+                if formula != np.nan:
+                    result = eval(formula)
+                else:
+                    result = formula
+                temp_dict[ID] = result
+            else:
+                temp_dict[ID] = 'Nan'
+                
+        return_dict[year] = temp_dict
+        
+    return return_dict
+
+evaluated_key = evaluate(eval_map, formula_key)
 
 
+def turn_into_dataframe(evaluated_key):
+    '''
+    '''
+    counter = 0 
+    for year, values in evaluated_key.items():
+        data = []
+        for key, amount in values.items():
+            data.append([key, amount])
+        df_temp = pd.DataFrame(data, columns = ['Product Name', year])
+        if counter > 0:
+            df = df.merge(df_temp, how='inner', on='Product Name')
+        else: 
+            df = df_temp
+
+        counter += 1
+        
+    return df
+
+
+
+# Produce Final Data -------------------------------------------
+
+
+def check_string(x, string_list):
+    for string in string_list:
+        if string in x:
+            return string
+    return None
+
+
+
+def merge_final_clean(raw_dataframe, evaluated_key):
+    '''
+    '''
+    cols = ['Proper Name', 'Generic Name', 
+            'Medicare Spend', 'Original Manufacturer', 
+            'Application', 'Approval Date', 'Year']
+    
+    pnames = list(raw_dataframe['Proper Name'])
+    temp = raw_dataframe[cols].drop_duplicates()
+    
+    evaluated_key["Proper Name"] = evaluated_key["Product Name"].apply(lambda x: check_string(x, pnames))
+    
+    return temp.merge(evaluated_key, how='left', on='Proper Name')
 
 
 
