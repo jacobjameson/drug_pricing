@@ -9,6 +9,7 @@
 
 import numpy as np
 import pandas as pd
+from numpy import nan
 
 
 # Key for currency conversions ------------------------------
@@ -114,7 +115,6 @@ def evaluate_helper(clean_dataframe):
     return holder
 
     
-eval_map = evaluate_helper(clean)
 
 def evaluate(eval_map, formula_key):
     '''
@@ -138,7 +138,6 @@ def evaluate(eval_map, formula_key):
         
     return return_dict
 
-evaluated_key = evaluate(eval_map, formula_key)
 
 
 def turn_into_dataframe(evaluated_key):
@@ -192,25 +191,27 @@ def merge_final_clean(raw_dataframe, evaluated_key):
 def go():
     raw = './data/raw data/raw data.xlsx'
     
-    key = pd.read_excel(raw, sheet_name = 'dictionary')
+    key = pd.read_excel(raw, sheet_name = 'conversions')
     conversion_key = create_dict_key(key)
+    
+    print('20%')
     df = pd.read_excel(raw, sheet_name = 'raw data')
     clean = adjustments(df, conversion_key)
+    print('40%')
     key = pd.read_excel(raw, sheet_name = 'dictionary')
     formula_key = formulas(key)
     eval_map = evaluate_helper(clean)
+    print('60%')
     evaluated_key = evaluate(eval_map, formula_key)
     evaluated_key = turn_into_dataframe(evaluated_key)
+    print('80%')
     final = merge_final_clean(df, evaluated_key)
 
-        
-    df.to_excel('./data/clean data/clean data.xlsx', 
-                sheet_name = 'new data', index=False)
+    final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
-
-    print('-----------------------------------------------/n')
+    print('-----------------------------------------------')
     print('You have cleaned the data. You can view in the clean data folder!')
-    print('-----------------------------------------------/n')
+    print('-----------------------------------------------')
     
         
         

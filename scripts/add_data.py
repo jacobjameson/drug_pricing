@@ -52,15 +52,15 @@ def go():
             print('raw data has been updated!')
             
 
-        print('-----------------------------------------------/n')
+        print('-----------------------------------------------')
         print('You have updated the data')
-        print('-----------------------------------------------/n')
+        print('-----------------------------------------------')
     
     else:
-        print('-----------------------------------------------/n')
-        print('ERROR: There was no data uploaded to add./n')
+        print('-----------------------------------------------')
+        print('ERROR: There was no data uploaded to add.')
         print('Make sure you have added data to new data.xlsx.')
-        print('-----------------------------------------------/n')
+        print('-----------------------------------------------')
         
         
 if __name__ == "__main__":
