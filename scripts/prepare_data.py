@@ -231,6 +231,7 @@ def go():
     evaluated_key = turn_into_dataframe(evaluated_key)
     print('80%')
     final = merge_final_clean(df, evaluated_key)
+    final = reformat_final(data)
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
