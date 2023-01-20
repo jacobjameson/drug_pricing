@@ -207,9 +207,12 @@ def reformat_final(dataframe):
     year_cols = [f't{i}' for i in range(num_years)]
     cols = list(other_info) + year_cols
         
-    data = pd.DataFrame(data, columns = cols).fillna(np.nan)
-            
-    return data
+    data = pd.DataFrame(data, columns = cols)
+    data[year_cols] = data[year_cols].astype(float)
+
+    
+    return data.fillna(np.nan)
+
 
 # GO --------------------------------------------------------------
 
@@ -231,7 +234,7 @@ def go():
     evaluated_key = turn_into_dataframe(evaluated_key)
     print('80%')
     final = merge_final_clean(df, evaluated_key)
-    final = reformat_final(data)
+    final = reformat_final(final)
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
