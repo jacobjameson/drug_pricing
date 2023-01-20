@@ -186,6 +186,31 @@ def merge_final_clean(raw_dataframe, evaluated_key):
     return temp.merge(evaluated_key, how='left', on='Proper Name')
 
 
+
+def reformat_final(dataframe):
+    '''
+    '''
+    data = []
+    years = dataframe.columns[8:]
+    other_info = dataframe.columns[:8]
+    
+    for index, row in dataframe.iterrows():
+        new_data = list(row[other_info].values)
+        for year in years:
+            if row[str(year)] != 0:
+                new_data.append(row[str(year)])
+                
+        data.append(new_data)
+        
+    longest_list = max(data, key=lambda x: len(x))
+    num_years = len(longest_list) - 8
+    year_cols = [f't{i}' for i in range(num_years)]
+    cols = list(other_info) + year_cols
+        
+    data = pd.DataFrame(data, columns = cols).fillna(np.nan)
+            
+    return data
+
 # GO --------------------------------------------------------------
 
 def go():
