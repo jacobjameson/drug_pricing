@@ -8,6 +8,10 @@
   - this will add the additional rows to "data/raw data/raw data.xlsx"
   - clear "data/new data/new data.xlsx" to an empty excel file
   - if there is no data in "data/new data/new data.xlsx", you will be alerted that the data has not been added yet
-(4) run `bash clean_data.sh`
-(5) new cleaned data, summarized by drug, will appear in "data/clean data/clean data.xlsx" 
+  
 
+### If you need to clean data:
+
+(1) open terminal on computer
+(2) run `bash clean_data.sh`
+(3) new cleaned data, summarized by drug, will appear in "data/clean data/clean data.xlsx" 
