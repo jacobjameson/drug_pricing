@@ -209,9 +209,37 @@ def reformat_final(dataframe):
         
     data = pd.DataFrame(data, columns = cols)
     data[year_cols] = data[year_cols].astype(float)
+    data['t32'] = np.nan
 
-    
     return data.fillna(np.nan)
+
+
+
+def find_last_valid(row):
+    last_valid = row.last_valid_index()
+    return (last_valid, row[last_valid])
+
+
+def pro_rate(dataframe):
+    '''
+    '''
+    last_values = dataframe.apply(find_last_valid, axis=1).tolist()
+    
+    end_of_year = pd.to_datetime(dataframe['Approval Date'].dt.year.astype(str) + '-12-31')
+    days_remaining = (end_of_year - dataframe['Approval Date']).dt.days
+    dataframe['percent_remaining'] = (days_remaining / 365)
+    dataframe['percent_missing'] = 1 - dataframe['percent_remaining']
+    
+    for year in range(0,32):
+        var = 't' + str(year)
+        var1 = 't' + str(year+1)
+        dataframe[var] = (dataframe[var]) + (dataframe[var1]*dataframe['percent_missing'])
+        dataframe[var1] -= (dataframe[var1]*dataframe['percent_missing'])
+    
+    for i, (col, val) in enumerate(last_values):
+        dataframe.loc[dataframe.index[i], col] = val
+    
+    return dataframe
 
 
 # GO --------------------------------------------------------------
@@ -235,6 +263,7 @@ def go():
     print('80%')
     final = merge_final_clean(df, evaluated_key)
     final = reformat_final(final)
+    final = pro_rate(final)
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
