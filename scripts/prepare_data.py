@@ -208,19 +208,21 @@ def reformat_final(dataframe):
     for index, row in dataframe.iterrows():
         new_data = list(row[other_info].values)
         for year in years:
-            if row[str(year)] != 0:
+            #if row[str(year)] != 0:
+                #new_data.append(row[str(year)])
+            if int(year) >= row['Year']:
                 new_data.append(row[str(year)])
                 
         data.append(new_data)
         
     longest_list = max(data, key=lambda x: len(x))
     num_years = len(longest_list) - 8
-    year_cols = [f't{i}' for i in range(num_years)]
+    year_cols = [f't{i}' for i in range(1, num_years+1)]
     cols = list(other_info) + year_cols
         
     data = pd.DataFrame(data, columns = cols)
     data[year_cols] = data[year_cols].astype(float)
-    data['t32'] = np.nan
+    data['t31'] = np.nan
 
     return data.fillna(np.nan)
 
@@ -229,7 +231,6 @@ def reformat_final(dataframe):
 def find_last_valid(row):
     last_valid = row.last_valid_index()
     return (last_valid, row[last_valid])
-
 
 def pro_rate(dataframe):
     '''
@@ -241,7 +242,7 @@ def pro_rate(dataframe):
     dataframe['percent_remaining'] = (days_remaining / 365)
     dataframe['percent_missing'] = 1 - dataframe['percent_remaining']
     
-    for year in range(0,32):
+    for year in range(1,31):
         var = 't' + str(year)
         var1 = 't' + str(year+1)
         dataframe[var] = (dataframe[var]) + (dataframe[var1]*dataframe['percent_missing'])
@@ -251,6 +252,7 @@ def pro_rate(dataframe):
         dataframe.loc[dataframe.index[i], col] = val
     
     return dataframe
+
 
 
 
