@@ -174,6 +174,12 @@ def check_string(x, string_list):
 def merge_final_clean(raw_dataframe, evaluated_key):
     '''
     '''
+    cols_y = ['FY2007', 'FY2008', 'FY2009', 'FY2010', 'FY2011',
+       'FY2012', 'FY2013', 'FY2014', 'FY2015', 'FY2016', 'FY2017', 'FY2018',
+       'FY2019', 'FY2020', 'FY2021', 'FY2022', 'FY2023', 'FY2024', 'FY2025',
+       'FY2026', 'FY2027', 'FY2028', 'FY2029', 'FY2030', 'FY2031', 'FY2032',
+       'FY2033', 'FY2034', 'FY2035', 'FY2036', 'FY2037', 'FY2038']
+    
     cols = ['Proper Name', 'Generic Name', 
             'Medicare Spend', 'Original Manufacturer', 
             'Application', 'Approval Date', 'Year']
@@ -183,7 +189,12 @@ def merge_final_clean(raw_dataframe, evaluated_key):
     
     evaluated_key["Proper Name"] = evaluated_key["Product Name"].apply(lambda x: check_string(x, pnames))
     
-    return temp.merge(evaluated_key, how='left', on='Proper Name')
+    final = temp.merge(evaluated_key, how='left', on='Proper Name')
+
+    for col in cols_y:
+        final = final.rename(columns={col: col[2:]})
+    
+    return final
 
 
 
@@ -242,6 +253,17 @@ def pro_rate(dataframe):
     return dataframe
 
 
+
+def apply_discount(dataframe, discount_rate=0.1):
+    '''
+    '''
+    for year in range(1,31):
+        var = 't' + str(year)
+        dataframe[var] = dataframe[var]/(1+discount_rate)**(year-0.5)
+        
+    return dataframe
+
+
 # GO --------------------------------------------------------------
 
 def go():
@@ -264,6 +286,7 @@ def go():
     final = merge_final_clean(df, evaluated_key)
     final = reformat_final(final)
     final = pro_rate(final)
+    final = apply_discount(final)
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
