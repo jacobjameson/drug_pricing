@@ -54,7 +54,10 @@ def adjustments(raw_data, conversion_key, fy_starts=13):
             year_match = int(year[2:])
             infl = conversion_key[year_match]['Inflation Adjustment']
             curr = conversion_key[year_match][currency]
-            row[year] = (float(row[year])/curr)*infl
+            if currency == 'Yen':
+                row[year] = (float(row[year])/(1000/curr))*infl
+            else:
+                row[year] = (float(row[year])/curr)*infl
             
         raw_data.loc[index] = row
         
@@ -73,7 +76,7 @@ def split_strings(string):
     if string == '':
         return string
     for char in string:
-        if char not in ['+', '-', '*']:
+        if char not in ['+', '-', '*', '/']:
             new_string += char
         else:
             new_string += '}'
@@ -127,7 +130,10 @@ def evaluate(eval_map, formula_key):
             if formula != '{Nan}':
                 formula = formula.format(**temp)
                 if formula != np.nan:
-                    result = eval(formula)
+                    try:
+                        result = eval(formula)
+                    except ZeroDivisionError:
+                        result = 0
                 else:
                     result = formula
                 temp_dict[ID] = result
@@ -137,7 +143,6 @@ def evaluate(eval_map, formula_key):
         return_dict[year] = temp_dict
         
     return return_dict
-
 
 
 def turn_into_dataframe(evaluated_key):
