@@ -76,7 +76,7 @@ def split_strings(string):
     if string == '':
         return string
     for char in string:
-        if char not in ['+', '-', '*', '/']:
+        if char not in ['+', '-', '*', '/', '(', ')']:
             new_string += char
         else:
             new_string += '}'
@@ -84,6 +84,8 @@ def split_strings(string):
             new_string += '{'
     
     new_string += '}'
+    new_string = new_string.replace("{}", "" )
+    
     return new_string.replace("{0.5}", "0.5" )
 
 
@@ -293,7 +295,7 @@ def go():
     final = merge_final_clean(df, evaluated_key)
     final = reformat_final(final)
     final = pro_rate(final)
-    final = apply_discount(final)
+    #final = apply_discount(final)
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
