@@ -10,6 +10,7 @@
 import numpy as np
 import pandas as pd
 from numpy import nan
+import sys
 
 
 # Key for currency conversions ------------------------------
@@ -273,6 +274,58 @@ def apply_discount(dataframe, discount_rate=0.1):
     return dataframe
 
 
+
+# Produce Final Data -------------------------------------------
+
+
+def create_summary(subset, dataframe, approval_years):
+    '''
+    '''
+    dataframe = dataframe[dataframe['Product Name'].str.contains("WW")]
+    
+    if subset != 'All':
+        dataframe = dataframe[dataframe['Application'] == subset]
+    if approval_years != ['All']:
+        dataframe = dataframe[(approval_years[0] >= dataframe['Year'].astype('int32')) & 
+                  (dataframe['Year'].astype('int32') <=  approval_years[1])]
+    
+    year_cols = [f't{i}' for i in range(1, 21)]
+    final = pd.DataFrame(dataframe[year_cols].describe())
+    
+    final['sum of annual revenues, years 1-9'] = dataframe[year_cols[:9]].sum().sum()
+    final['sum of annual revenues, years 10-13'] = dataframe[year_cols[10:13]].sum().sum()
+    final['sum of annual revenues, years 14-20'] = dataframe[year_cols[14:20]].sum().sum()
+    final['sum of ALL annual revenues, years 1-20'] = dataframe[year_cols].sum().sum()
+    
+    return final
+
+
+def clean_summary(dataframe, approval_years):
+    '''
+    '''
+    
+    alldrugs = create_summary('All', dataframe, approval_years)
+    nda = create_summary('NDA', dataframe, approval_years)
+    bla = create_summary('BLA', dataframe, approval_years)
+    
+    clean = pd.concat([alldrugs, nda, bla])
+    clean = clean.assign(Class=['All']*8 + ['NDA']*8 + ['BLA']*8)
+    
+    # select the subset of columns to check for duplicates
+    cols_to_check = ['sum of annual revenues, years 1-9', 
+                     'sum of annual revenues, years 10-13', 
+                     'sum of annual revenues, years 14-20', 
+                     'sum of ALL annual revenues, years 1-20',
+                     'Class']
+
+    # replace duplicate values with blank
+    clean.loc[clean.duplicated(cols_to_check), cols_to_check] = np.nan 
+    clean = clean.fillna("")
+    clean = clean.reset_index().rename(columns={'index': 'stats'})
+    clean.insert(0, 'Class', clean.pop('Class'))
+    
+    return clean
+
 # GO --------------------------------------------------------------
 
 def go():
@@ -295,7 +348,7 @@ def go():
     final = merge_final_clean(df, evaluated_key)
     final = reformat_final(final)
     final = pro_rate(final)
-    #final = apply_discount(final)
+    final = apply_discount(final, float(sys.argv[1]))
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
@@ -303,7 +356,12 @@ def go():
     print('You have cleaned the data. You can view in the clean data folder!')
     print('-----------------------------------------------')
     
-        
+    print('-----------------------------------------------')
+    print('Producing Summary Statistics')
+    print('-----------------------------------------------')
+    
+    clean = clean_summary(final, ['All'])
+    clean.to_excel('./data/clean data/summary stats_discount_' + sys.argv[1] + '.xlsx', index=False)
         
 if __name__ == "__main__":
     go()
