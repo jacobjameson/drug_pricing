@@ -299,11 +299,13 @@ def create_summary(subset, dataframe, approval_years):
     temp = pd.DataFrame(dataframe[year_cols].sum()).transpose().assign(stats=['Gross Revenue'])
     final = pd.concat([final, temp])
     
+    max_rev_year = temp.iloc[[0]][year_cols].idxmax(axis=1)[0]
     
     final['sum of annual revenues, years 1-9'] = dataframe[year_cols[:9]].sum().sum()
     final['sum of annual revenues, years 10-13'] = dataframe[year_cols[10:13]].sum().sum()
     final['sum of annual revenues, years 14-20'] = dataframe[year_cols[14:20]].sum().sum()
     final['sum of ALL annual revenues, years 1-20'] = dataframe[year_cols].sum().sum()
+    final['Peak Revenue Year'] = max_rev_year
     
     return final
 
@@ -324,7 +326,7 @@ def clean_summary(dataframe, approval_years):
                      'sum of annual revenues, years 10-13', 
                      'sum of annual revenues, years 14-20', 
                      'sum of ALL annual revenues, years 1-20',
-                     'Class']
+                     'Class','Peak Revenue Year']
 
     # replace duplicate values with blank
     clean.loc[clean.duplicated(cols_to_check), cols_to_check] = np.nan 
