@@ -1,6 +1,6 @@
 # -----------------------------------------------------------
 # AUTHOR:           Jacob Jameson
-# Last Updated:     01/12/2023
+# Last Updated:     02/19/2023
 # PURPOSE:          Prepare raw data
 # -----------------------------------------------------------
 
@@ -291,6 +291,10 @@ def create_summary(subset, dataframe, approval_years):
     
     year_cols = [f't{i}' for i in range(1, 21)]
     final = pd.DataFrame(dataframe[year_cols].describe())
+    final = final.reset_index().rename(columns={'index': 'stats'})
+    temp = pd.DataFrame(dataframe[year_cols].sum()).transpose().assign(stats=['Gross Revenue'])
+    final = pd.concat([final, temp])
+    
     
     final['sum of annual revenues, years 1-9'] = dataframe[year_cols[:9]].sum().sum()
     final['sum of annual revenues, years 10-13'] = dataframe[year_cols[10:13]].sum().sum()
@@ -309,7 +313,7 @@ def clean_summary(dataframe, approval_years):
     bla = create_summary('BLA', dataframe, approval_years)
     
     clean = pd.concat([alldrugs, nda, bla])
-    clean = clean.assign(Class=['All']*8 + ['NDA']*8 + ['BLA']*8)
+    clean = clean.assign(Class=['All']*9 + ['NDA']*9 + ['BLA']*9)
     
     # select the subset of columns to check for duplicates
     cols_to_check = ['sum of annual revenues, years 1-9', 
@@ -321,7 +325,6 @@ def clean_summary(dataframe, approval_years):
     # replace duplicate values with blank
     clean.loc[clean.duplicated(cols_to_check), cols_to_check] = np.nan 
     clean = clean.fillna("")
-    clean = clean.reset_index().rename(columns={'index': 'stats'})
     clean.insert(0, 'Class', clean.pop('Class'))
     
     return clean
