@@ -264,9 +264,13 @@ def pro_rate(dataframe):
 
 
 
-def apply_discount(dataframe, discount_rate=0.1):
+def apply_discount(dataframe, discount_rate):
     '''
     '''
+    #if no discount rate is passed then no discount is applied
+    if len(sys.argv) == 1:
+        return dataframe
+    
     for year in range(1,31):
         var = 't' + str(year)
         dataframe[var] = dataframe[var]/(1+discount_rate)**(year-0.5)
@@ -351,7 +355,9 @@ def go():
     final = merge_final_clean(df, evaluated_key)
     final = reformat_final(final)
     final = pro_rate(final)
-    final = apply_discount(final, float(sys.argv[1]))
+    
+    if len(sys.argv) > 1:
+        final = apply_discount(final, float(sys.argv[1]))
 
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
@@ -364,7 +370,12 @@ def go():
     print('-----------------------------------------------')
     
     clean = clean_summary(final, ['All'])
-    clean.to_excel('./data/clean data/summary stats_discount_' + sys.argv[1] + '.xlsx', index=False)
+    
+    if len(sys.argv) == 1:
+        clean.to_excel('./data/clean data/summary stats_no_discount.xlsx', index=False)
+    else:
+        clean.to_excel('./data/clean data/summary stats_discount_' + sys.argv[1] + '.xlsx', index=False)
+        
         
 if __name__ == "__main__":
     go()
