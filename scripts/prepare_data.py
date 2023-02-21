@@ -56,7 +56,7 @@ def adjustments(raw_data, conversion_key, fy_starts=13):
             infl = conversion_key[year_match]['Inflation Adjustment']
             curr = conversion_key[year_match][currency]
             if currency == 'Yen':
-                row[year] = (float(row[year])/(1000/curr))*infl
+                row[year] = (float(row[year])/(curr)*1000)*infl
             else:
                 row[year] = (float(row[year])/curr)*infl
             
