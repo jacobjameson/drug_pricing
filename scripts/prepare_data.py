@@ -93,6 +93,7 @@ def split_strings(string):
 def formulas(dataframe):
     '''
     '''
+    dataframe['formula'] = dataframe['formula'].str.replace(" ", "")
     dataframe["formula"] = dataframe["formula"].apply(split_strings)
     formula_key = dict()
     for _, row in dataframe.iterrows():
@@ -182,11 +183,7 @@ def check_string(x, string_list):
 def merge_final_clean(raw_dataframe, evaluated_key):
     '''
     '''
-    cols_y = ['FY2007', 'FY2008', 'FY2009', 'FY2010', 'FY2011',
-       'FY2012', 'FY2013', 'FY2014', 'FY2015', 'FY2016', 'FY2017', 'FY2018',
-       'FY2019', 'FY2020', 'FY2021', 'FY2022', 'FY2023', 'FY2024', 'FY2025',
-       'FY2026', 'FY2027', 'FY2028', 'FY2029', 'FY2030', 'FY2031', 'FY2032',
-       'FY2033', 'FY2034', 'FY2035', 'FY2036', 'FY2037', 'FY2038']
+    cols_y = list(raw_dataframe.columns[13:])
     
     cols = ['Proper Name', 'Generic Name', 
             'Medicare Spend', 'Original Manufacturer', 
@@ -201,6 +198,8 @@ def merge_final_clean(raw_dataframe, evaluated_key):
 
     for col in cols_y:
         final = final.rename(columns={col: col[2:]})
+        
+    final['Proper Name'] = final['Product Name'].str.split().str.get(0)
     
     return final
 
@@ -230,7 +229,7 @@ def reformat_final(dataframe):
         
     data = pd.DataFrame(data, columns = cols)
     data[year_cols] = data[year_cols].astype(float)
-    data['t31'] = np.nan
+    #data['t31'] = np.nan
 
     return data.fillna(np.nan)
 
@@ -360,7 +359,8 @@ def go():
     
     if len(sys.argv) > 1:
         final = apply_discount(final, float(sys.argv[1]))
-
+    
+    final = final.dropna(subset=['Proper Name'])
     final.to_excel('./data/clean data/clean data.xlsx', index=False)
             
     print('-----------------------------------------------')
